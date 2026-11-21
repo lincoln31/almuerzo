@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Almuerzo para ti</title>
+<meta name="description" content="Una invitación a almorzar, preparada con cariño.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --crema:#fff6e8; --papel:#fffdf8; --terracota:#c8553d; --terracota-osc:#9c3d2a;
+    --oliva:#6b7a3a; --miel:#e9a23b; --tinta:#3b2a22; --suave:#8a6f60;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%}
+  body{
+    font-family:'Figtree',system-ui,sans-serif;color:var(--tinta);
+    background:radial-gradient(circle at 20% 10%,#ffe9c7 0,transparent 45%),
+               radial-gradient(circle at 85% 90%,#f6d3bf 0,transparent 45%),var(--crema);
+    display:flex;justify-content:center;padding:28px 16px 60px;overflow-x:hidden;
+  }
+  .card{
+    width:100%;max-width:520px;background:var(--papel);border-radius:28px;
+    padding:36px 28px 40px;text-align:center;position:relative;z-index:1;
+    box-shadow:0 20px 50px -20px rgba(120,60,30,.35);border:1px solid #f1dcc2;
+  }
+  h1,h2{font-family:'Fraunces',serif;font-weight:600;line-height:1.15}
+  h1{font-size:2.3rem;color:var(--terracota-osc);margin:14px 0 8px}
+  h1 em{font-style:italic;font-weight:400;color:var(--terracota)}
+  .lead{color:var(--suave);font-size:1.05rem;line-height:1.55;margin-bottom:22px}
+  .plato{width:170px;height:150px;margin:0 auto;display:block}
+  .vapor path{fill:none;stroke:#d9b99a;stroke-width:4;stroke-linecap:round;opacity:0;
+    animation:subir 3s ease-in-out infinite}
+  .vapor path:nth-child(2){animation-delay:.8s}.vapor path:nth-child(3){animation-delay:1.6s}
+  @keyframes subir{0%{opacity:0;transform:translateY(14px)}40%{opacity:.9}100%{opacity:0;transform:translateY(-16px)}}
+  .detalles{display:grid;gap:10px;margin:22px 0;text-align:left}
+  .det{display:flex;gap:12px;align-items:center;background:#fff3de;border-radius:16px;padding:12px 16px}
+  .det span.i{font-size:1.4rem}
+  .det b{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--suave)}
+  .menu{font-family:'Fraunces',serif;font-style:italic;color:var(--oliva);font-size:1.1rem;margin:6px 0 22px}
+  .pregunta{font-family:'Fraunces',serif;font-size:1.35rem;margin-bottom:16px}
+  .botones{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;min-height:56px;position:relative}
+  button{font:inherit;cursor:pointer;border:0;border-radius:999px;padding:14px 30px;font-weight:600;
+    transition:transform .15s,box-shadow .15s,background .2s}
+  .si{background:var(--terracota);color:#fff;box-shadow:0 8px 18px -8px var(--terracota-osc);font-size:1.05rem}
+  .si:hover{transform:translateY(-2px);background:var(--terracota-osc)}
+  .no{background:#f3e5d2;color:var(--suave)}
+  .no.huye{position:fixed;z-index:5}
+  form{display:none;text-align:left;margin-top:26px;animation:entra .6s ease both}
+  form.on{display:block}
+  @keyframes entra{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  fieldset{border:0;margin-bottom:18px}
+  legend,label.t{font-weight:600;font-size:.9rem;margin-bottom:8px;display:block}
+  .op{display:flex;flex-wrap:wrap;gap:8px}
+  .op input{position:absolute;opacity:0}
+  .op label{padding:9px 16px;border-radius:999px;background:#f8ead6;cursor:pointer;font-size:.92rem;
+    border:2px solid transparent;transition:.15s}
+  .op input:checked+label{background:#fde0c8;border-color:var(--terracota);color:var(--terracota-osc)}
+  .op input:focus-visible+label{outline:2px solid var(--oliva);outline-offset:2px}
+  textarea,input[type=text]{width:100%;font:inherit;padding:12px 14px;border-radius:14px;
+    border:2px solid #f1dcc2;background:#fff;color:var(--tinta);resize:vertical}
+  textarea:focus,input[type=text]:focus{outline:none;border-color:var(--miel)}
+  .enviar{width:100%;margin-top:6px}
+  .error{color:var(--terracota-osc);font-size:.85rem;min-height:1.2em;margin-bottom:8px}
+  .gracias{display:none;margin-top:26px;animation:entra .6s ease both}
+  .gracias.on{display:block}
+  .gracias h2{color:var(--oliva);font-size:1.7rem;margin-bottom:8px}
+  .modal{position:fixed;inset:0;background:rgba(59,42,34,.45);display:none;align-items:center;
+    justify-content:center;padding:20px;z-index:10}
+  .modal.on{display:flex}
+  .modal div{background:var(--papel);border-radius:24px;padding:28px;max-width:340px;text-align:center}
+  .modal p{margin-bottom:18px;line-height:1.5}
+  .modal .botones{gap:10px}
+  .miga{position:fixed;top:-30px;font-size:1.3rem;pointer-events:none;z-index:0;
+    animation:cae linear forwards}
+  @keyframes cae{to{transform:translateY(110vh) rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.vapor path{opacity:.7}}
+</style>
+</head>
+<body>
+<main class="card">
+  <svg class="plato" viewBox="0 0 170 150" aria-hidden="true">
+    <g class="vapor"><path d="M65 48c-8-10 8-16 0-28"/><path d="M85 48c-8-10 8-16 0-28"/><path d="M105 48c-8-10 8-16 0-28"/></g>
+    <ellipse cx="85" cy="128" rx="72" ry="14" fill="#efd7bb"/>
+    <path d="M25 70h120c0 40-26 60-60 60S25 110 25 70z" fill="#c8553d"/>
+    <path d="M25 70h120" stroke="#9c3d2a" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="60" cy="86" r="5" fill="#e9a23b"/><circle cx="88" cy="96" r="5" fill="#6b7a3a"/><circle cx="112" cy="84" r="5" fill="#fff6e8"/>
+  </svg>
+
+  <h1 id="titulo">Te invito a <em>almorzar</em></h1>
+  <p class="lead" id="mensaje"></p>
+
+  <div class="detalles">
+    <div class="det"><span class="i">📅</span><div><b>Cuándo</b><span id="cuando"></span></div></div>
+    <div class="det"><span class="i">📍</span><div><b>Dónde</b><span id="donde"></span></div></div>
+  </div>
+  <p class="menu" id="menu"></p>
+
+  <div id="pregunta">
+    <p class="pregunta">¿Me acompañas?</p>
+    <div class="botones" id="botones">
+      <button class="si" id="btnSi" type="button">Sí, claro 💛</button>
+      <button class="no" id="btnNo" type="button">No</button>
+    </div>
+  </div>
+
+  <form id="form" novalidate>
+    <fieldset>
+      <legend>¿Qué te provoca para tomar?</legend>
+      <div class="op" id="bebidas"></div>
+    </fieldset>
+    <fieldset>
+      <legend>¿Qué prefieres de plato principal?</legend>
+      <div class="op" id="platos"></div>
+    </fieldset>
+    <label class="t" for="alergias">¿Alguna alergia o algo que no te guste?</label>
+    <textarea id="alergias" rows="2" placeholder="Cuéntame para cuidarte..."></textarea>
+    <p class="error" id="error" role="alert"></p>
+    <button class="si enviar" type="submit">Confirmar mi asistencia</button>
+  </form>
+
+  <div class="gracias" id="gracias">
+    <h2>¡Qué felicidad! 🥰</h2>
+    <p class="lead" id="graciasTexto"></p>
+  </div>
+</main>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <div>
+    <p>Mmm... preparé todo con mucho cariño. ¿Segura que no quieres venir? 🥺</p>
+    <div class="botones">
+      <button class="si" id="acepto" type="button">Bueno, sí voy</button>
+      <button class="no" id="sigoNo" type="button">Sigo pensándolo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ====== PERSONALIZA AQUÍ ======
+  const CONFIG = {
+    nombre: '',                       // Nombre de ella (opcional). Ej: 'Valentina'
+    mensaje: 'Quiero cocinar para ti y pasar una tarde tranquila, solo los dos.',
+    fecha: 'Sábado 29 de noviembre',  // Texto libre
+    hora: '1:00 pm',
+    lugar: 'En mi casa (te mando la ubicación)',
+    menu: 'Yo cocino, tú solo disfrutas.',
+    bebidas: ['Limonada', 'Jugo natural', 'Agua', 'Vino'],
+    platos: ['Pasta', 'Carne', 'Pollo', 'Vegetariano'],
+    whatsapp: '',                     // Tu número con indicativo, sin +. Ej: '573001234567'. Vacío = no envía nada
+  };
+  // ==============================
+
+  const $ = id => document.getElementById(id);
+  const reducido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (CONFIG.nombre) $('titulo').innerHTML = `${CONFIG.nombre}, te invito a <em>almorzar</em>`;
+  $('mensaje').textContent = CONFIG.mensaje;
+  $('cuando').textContent = `${CONFIG.fecha}, ${CONFIG.hora}`;
+  $('donde').textContent = CONFIG.lugar;
+  $('menu').textContent = CONFIG.menu;
+
+  const radios = (cont, name, items) => items.forEach((t, i) => {
+    cont.insertAdjacentHTML('beforeend',
+      `<span><input type="radio" name="${name}" id="${name}${i}" value="${t}"><label for="${name}${i}">${t}</label></span>`);
+  });
+  radios($('bebidas'), 'bebida', CONFIG.bebidas);
+  radios($('platos'), 'plato', CONFIG.platos);
+
+  // Botón "No" que se escapa
+  const no = $('btnNo');
+  let intentos = 0;
+  const huir = () => {
+    if (++intentos > 4) { no.removeEventListener('mouseenter', huir); return; }
+    const r = no.getBoundingClientRect();
+    no.classList.add('huye');
+    const x = Math.random() * (innerWidth - r.width - 20) + 10;
+    const y = Math.random() * (innerHeight - r.height - 20) + 10;
+    no.style.left = x + 'px'; no.style.top = y + 'px';
+  };
+  if (!reducido) { no.addEventListener('mouseenter', huir); no.addEventListener('touchstart', e => { if (intentos <= 4) { e.preventDefault(); huir(); } }, {passive:false}); }
+  no.addEventListener('click', () => $('modal').classList.add('on'));
+
+  // Migas / frutas cayendo
+  const confeti = () => {
+    if (reducido) return;
+    const e = ['🍅','🌿','🍋','🥖','🧀','🫒'];
+    for (let i = 0; i < 24; i++) setTimeout(() => {
+      const s = document.createElement('span');
+      s.className = 'miga'; s.textContent = e[i % e.length];
+      s.style.left = Math.random() * 100 + 'vw';
+      s.style.animationDuration = 3 + Math.random() * 3 + 's';
+      document.body.appendChild(s); setTimeout(() => s.remove(), 6500);
+    }, i * 120);
+  };
+
+  const aceptar = () => {
+    $('modal').classList.remove('on');
+    $('pregunta').style.display = 'none';
+    $('form').classList.add('on');
+    confeti();
+    $('form').scrollIntoView({ behavior: reducido ? 'auto' : 'smooth', block: 'start' });
+  };
+  $('btnSi').addEventListener('click', aceptar);
+  $('acepto').addEventListener('click', aceptar);
+  $('sigoNo').addEventListener('click', () => $('modal').classList.remove('on'));
+
+  $('form').addEventListener('submit', e => {
+    e.preventDefault();
+    const bebida = document.querySelector('input[name=bebida]:checked');
+    const plato = document.querySelector('input[name=plato]:checked');
+    if (!bebida || !plato) { $('error').textContent = 'Elige una bebida y un plato, por favor 🙏'; return; }
+    $('error').textContent = '';
+    const alergias = $('alergias').value.trim();
+    const texto = `¡Sí voy al almuerzo! 🍽️\nBebida: ${bebida.value}\nPlato: ${plato.value}` +
+                  (alergias ? `\nAlergias/No me gusta: ${alergias}` : '');
+    $('form').classList.remove('on');
+    $('graciasTexto').textContent = `Te espero el ${CONFIG.fecha} a las ${CONFIG.hora}. Voy a preparar ${plato.value.toLowerCase()} con ${bebida.value.toLowerCase()}.`;
+    $('gracias').classList.add('on');
+    confeti();
+    if (CONFIG.whatsapp) window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
+  });
+})();
+</script>
+</body>
+</html>
