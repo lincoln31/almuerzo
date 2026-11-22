@@ -125,7 +125,9 @@
   .gracias p.eyebrow{font-family:var(--sans);font-style:normal;font-size:.72rem;color:var(--oro)}
   .gracias{position:relative;padding:10px 0 20px}
   .gracias > *:not(.estrellas){position:relative;z-index:1}
-  .estrellas{position:absolute;inset:-60px -40px;z-index:0;pointer-events:none;overflow:hidden}
+  .estrellas{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  body.final section:not(#rsvp),body.final footer{display:none}
+  body.final #rsvp{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;justify-content:center}
   .estrellas i{position:absolute;width:var(--s);height:var(--s);border-radius:50%;background:#fff6c8;
     box-shadow:0 0 7px 1px rgba(255,226,150,.85);animation:titila var(--t) ease-in-out var(--dl) infinite}
   @keyframes titila{0%,100%{opacity:.15;transform:scale(.6)}50%{opacity:1;transform:scale(1.25)}}
@@ -397,19 +399,36 @@
     if (!v) { $('previa').hidden = true; return; }
     r.pause(); r.src = v; r.load();
     $('previa').hidden = false;
+    r.play().catch(() => {}); // arranca solo; el clic del usuario lo permite
   });
 
-  // ---- Música ambiental (WebAudio, sin archivos) ----
-  let ctx, master, timer, sonando = false;
-  const acordes = [[57,60,64,67],[53,57,60,64],[48,52,55,59],[55,59,62,66]]; // Am7 Fmaj7 Cmaj7 G6
+  // ---- Música romántica (WebAudio, sin archivos) ----
+  let ctx, master, timer, sonando = false, pausadaPorVideo = false;
+  const VOL = .55;
+  // Progresión tipo "Canon en Do": C G Am Em F C F G
+  const prog = [[48,55,60,64,67],[43,55,59,62,67],[45,52,57,60,64],[40,52,55,59,64],[41,53,57,60,65],[48,55,60,64,67],[41,53,57,60,65],[43,55,59,62,67]];
   const hz = m => 440 * Math.pow(2, (m - 69) / 12);
-  function nota(m, t, dur, vol) {
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.type = 'triangle'; o.frequency.value = hz(m);
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(vol, t + .03);
-    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
-    o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .1);
+  // Nota tipo piano suave: fundamental + armónico, ataque rápido y caída larga
+  function pluck(m, t, dur, vol) {
+    [[1, 1], [2, .22]].forEach(([mult, amp]) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = hz(m) * mult;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(vol * amp, t + .015);
+      g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .1);
+    });
+  }
+  // Colchón de cuerdas: notas largas, ataque y salida lentos
+  function pad(m, t, dur, vol) {
+    [-6, 6].forEach(cents => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = hz(m); o.detune.value = cents;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(vol, t + 1.6);
+      g.gain.linearRampToValueAtTime(0, t + dur);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .1);
+    });
   }
   function iniciarMusica() {
     const AC = window.AudioContext || window.webkitAudioContext;
@@ -417,32 +436,42 @@
     ctx = new AC();
     if (ctx.state === 'suspended') ctx.resume(); // iOS/Safari arrancan el audio en pausa
     master = ctx.createGain(); master.gain.value = 0;
-    const filtro = ctx.createBiquadFilter(); filtro.type = 'lowpass'; filtro.frequency.value = 1800;
-    const eco = ctx.createDelay(1); eco.delayTime.value = .42;
-    const fb = ctx.createGain(); fb.gain.value = .45;
-    const mezcla = ctx.createGain(); mezcla.gain.value = .5;
+    const filtro = ctx.createBiquadFilter(); filtro.type = 'lowpass'; filtro.frequency.value = 2600;
     master.connect(filtro); filtro.connect(ctx.destination);
-    filtro.connect(eco); eco.connect(fb); fb.connect(eco); eco.connect(mezcla); mezcla.connect(ctx.destination);
-    master.gain.linearRampToValueAtTime(.5, ctx.currentTime + 3);
+    // Eco largo y suave que imita la reverberación de una sala
+    [[.31, .5], [.47, .45]].forEach(([tiempo, fbk]) => {
+      const d = ctx.createDelay(1), fb = ctx.createGain(), mix = ctx.createGain();
+      d.delayTime.value = tiempo; fb.gain.value = fbk; mix.gain.value = .35;
+      filtro.connect(d); d.connect(fb); fb.connect(d); d.connect(mix); mix.connect(ctx.destination);
+    });
+    master.gain.linearRampToValueAtTime(VOL, ctx.currentTime + 3);
     let paso = 0;
+    const patron = [0, 2, 3, 4, 3, 2, 3, 1];
     const tocar = () => {
-      const ac = acordes[Math.floor(paso / 8) % acordes.length], t = ctx.currentTime + .05;
-      const patron = [0,2,1,3,2,1,3,2][paso % 8];
-      nota(ac[patron] + 12, t, 2.4, .11);
-      if (paso % 8 === 0) { nota(ac[0] - 12, t, 5, .16); nota(ac[1], t, 5, .05); }
+      const ac = prog[Math.floor(paso / 8) % prog.length], k = paso % 8, t = ctx.currentTime + .05;
+      if (k === 0) { [0, 1, 2].forEach(i => pad(ac[i], t, 5.6, .05)); pluck(ac[0] - 12, t, 3.2, .15); }
+      pluck(ac[patron[k]] + 12, t, 2.4, .1);
+      if ((k === 0 || k === 4) && Math.random() < .6) pluck(ac[2] + 24, t + .02, 3, .04);
       paso++;
     };
-    tocar(); timer = setInterval(tocar, 750);
+    tocar(); timer = setInterval(tocar, 520);
     sonando = true; actualizarBoton();
   }
   function alternarMusica() {
     if (!ctx) return iniciarMusica();
     if (sonando) { master.gain.setTargetAtTime(0, ctx.currentTime, .3); sonando = false; }
-    else { ctx.resume(); master.gain.setTargetAtTime(.5, ctx.currentTime, .5); sonando = true; }
+    else { ctx.resume(); master.gain.setTargetAtTime($('reproductor').paused ? VOL : 0, ctx.currentTime, .5); sonando = true; }
     actualizarBoton();
   }
   function actualizarBoton() { $('musica').textContent = sonando ? '♪' : '✕'; $('musica').style.opacity = sonando ? 1 : .6; }
   $('musica').addEventListener('click', alternarMusica);
+
+  // La música se pausa mientras se ve el video y vuelve cuando termina o se detiene
+  const rep = $('reproductor');
+  rep.addEventListener('play', () => { if (ctx && sonando) { master.gain.setTargetAtTime(0, ctx.currentTime, .25); pausadaPorVideo = true; } });
+  ['pause', 'ended'].forEach(ev => rep.addEventListener(ev, () => {
+    if (pausadaPorVideo) { pausadaPorVideo = false; if (sonando) master.gain.setTargetAtTime(VOL, ctx.currentTime, .8); }
+  }));
 
   // ---- Intro: encender la vela ----
   let abierto = false;
@@ -539,8 +568,11 @@
     $('ticket').innerHTML = [['Cuándo', `${CONFIG.fecha} · ${CONFIG.hora}`], ['Dónde', CONFIG.lugar], ['Plato', plato], ['Bebida', bebida], ['Postre', CONFIG.postre]]
       .map(([k, v]) => `<div><b>${k}</b><span>${v}</span></div>`).join('');
     estrellas();
+    $('reproductor').pause();
     $('gracias').classList.add('on');
-    $('gracias').scrollIntoView({ behavior: reducido ? 'auto' : 'smooth', block: 'center' });
+    // Pantalla final: se oculta el resto de la página para que no se pueda volver arriba
+    document.body.classList.add('final');
+    window.scrollTo(0, 0);
     fuegos(); petalos();
   };
 
@@ -571,9 +603,12 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           service_id: E.serviceId, template_id: E.templateId, user_id: E.publicKey,
-          // La plantilla de EmailJS es la del picnic: reutilizamos sus campos.
           template_params: {
             to_email: E.destino,
+            // Campos para la plantilla nueva (ver EMAIL_TEMPLATE.html)
+            plato: plato.value, bebida: bebida.value, postre: CONFIG.postre,
+            fecha: CONFIG.fecha, hora: CONFIG.hora, lugar: CONFIG.lugar,
+            // Campos de la plantilla vieja del picnic, por compatibilidad
             food_choice: `Plato: ${plato.value} | Bebida: ${bebida.value} | Postre: ${CONFIG.postre}`,
             moto_choice: 'Dijo que SÍ al almuerzo 🍽️',
             picnic_wish: 'Sin comentarios adicionales',

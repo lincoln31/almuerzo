@@ -1,0 +1,32 @@
+<!--
+  PLANTILLA DE CORREO PARA EMAILJS
+  1. Entra a https://dashboard.emailjs.com/admin/templates y crea una plantilla nueva.
+  2. En "Settings" de la plantilla:
+       To email:  {{to_email}}
+       Subject:   ¡Dijo que sí! 🍽️ {{plato}} el {{fecha}}
+  3. En "Content" elige el editor de código (</>) y pega todo lo de abajo.
+  4. Guarda, copia el Template ID y pásalo a CONFIG.emailjs.templateId en index.html.
+-->
+<div style="margin:0;padding:32px 16px;background:#1d0a12;font-family:Georgia,'Times New Roman',serif;">
+  <div style="max-width:520px;margin:0 auto;background:#fbf3e4;border:1px solid #c8903f;padding:34px 28px;text-align:center;color:#3b2a22;">
+    <div style="font-size:34px;line-height:1;">🍽️</div>
+    <p style="margin:14px 0 4px;font:12px Arial,sans-serif;letter-spacing:4px;text-transform:uppercase;color:#c8903f;">Confirmado</p>
+    <h1 style="margin:0 0 6px;font-size:30px;font-weight:normal;color:#6e1f38;">¡Dijo que <i>sí</i>!</h1>
+    <p style="margin:0 0 24px;font-style:italic;color:#8a6f60;">Ya puedes empezar a cocinar con ilusión.</p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e6cfa9;text-align:left;">
+      <tr><td style="padding:12px 0;border-bottom:1px solid #e6cfa9;font:11px Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:#c8903f;">Cuándo</td>
+          <td style="padding:12px 0;border-bottom:1px solid #e6cfa9;text-align:right;font-size:17px;">{{fecha}} · {{hora}}</td></tr>
+      <tr><td style="padding:12px 0;border-bottom:1px solid #e6cfa9;font:11px Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:#c8903f;">Dónde</td>
+          <td style="padding:12px 0;border-bottom:1px solid #e6cfa9;text-align:right;font-size:17px;">{{lugar}}</td></tr>
+      <tr><td style="padding:12px 0;border-bottom:1px solid #e6cfa9;font:11px Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:#c8903f;">Plato</td>
+          <td style="padding:12px 0;border-bottom:1px solid #e6cfa9;text-align:right;font-size:17px;">{{plato}}</td></tr>
+      <tr><td style="padding:12px 0;border-bottom:1px solid #e6cfa9;font:11px Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:#c8903f;">Bebida</td>
+          <td style="padding:12px 0;border-bottom:1px solid #e6cfa9;text-align:right;font-size:17px;">{{bebida}}</td></tr>
+      <tr><td style="padding:12px 0;font:11px Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:#c8903f;">Postre</td>
+          <td style="padding:12px 0;text-align:right;font-size:17px;">{{postre}}</td></tr>
+    </table>
+
+    <p style="margin:26px 0 0;font-style:italic;color:#6e1f38;">Nos vemos pronto ✦</p>
+  </div>
+</div>
