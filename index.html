@@ -335,12 +335,12 @@
 (() => {
   // ============ PERSONALIZA AQUÍ ============
   const CONFIG = {
-    nombre: '',                          // Su nombre. Ej: 'Valentina'
+    nombre: 'Mi amor',                        // Su nombre. Ej: 'Valentina'
     mensaje: 'Quiero cocinar para ti, poner la mesa con calma y que el resto del mundo espere afuera. Un almuerzo para dos, hecho con cariño.',
     fecha: 'Sábado 29 de noviembre',     // Texto que se muestra
     fechaISO: '2026-11-29',              // Para la cuenta regresiva (AAAA-MM-DD). Vacío = sin cuenta
     hora: '1:00 pm',
-    lugar: 'En mi casa. Te mando la ubicación.',
+    lugar: 'En mi casa · Cra. 26 D #72 D-23, Villa del Lago',
     menu: 'Yo cocino. Tú solo disfrutas.',
     bebidas: ['Limonada', 'Jugo natural', 'Agua', 'Gaseosa'],
     // video = archivo en videos/, para el botón "Ver receta"
@@ -565,6 +565,7 @@
     })(ini);
   };
   const celebrar = (plato, bebida) => {
+    $('graciasTexto').textContent = `Te espero el ${CONFIG.fecha} a las ${CONFIG.hora}. Prepararé ${plato.toLowerCase()} con ${bebida.toLowerCase()}, y después, ${CONFIG.postre.toLowerCase()} por mi cuenta.`;
     $('ticket').innerHTML = [['Cuándo', `${CONFIG.fecha} · ${CONFIG.hora}`], ['Dónde', CONFIG.lugar], ['Plato', plato], ['Bebida', bebida], ['Postre', CONFIG.postre]]
       .map(([k, v]) => `<div><b>${k}</b><span>${v}</span></div>`).join('');
     estrellas();
@@ -628,9 +629,20 @@
       window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
     }
     $('form').classList.remove('on');
-    $('graciasTexto').textContent = `Te espero el ${CONFIG.fecha} a las ${CONFIG.hora}. Prepararé ${plato.value.toLowerCase()} con ${bebida.value.toLowerCase()}, y después, ${CONFIG.postre.toLowerCase()} por mi cuenta.`;
+    try { localStorage.setItem('almuerzo-confirmado', JSON.stringify({ plato: plato.value, bebida: bebida.value })); } catch (_) {}
     celebrar(plato.value, bebida.value);
   });
+
+  // Si ya confirmó antes y recarga la página, vuelve directo a la pantalla final (sin reenviar el correo)
+  try {
+    const previa = JSON.parse(localStorage.getItem('almuerzo-confirmado'));
+    if (previa && previa.plato && previa.bebida) {
+      $('intro').style.display = 'none';
+      document.body.classList.remove('lock');
+      $('pregunta').style.display = 'none';
+      celebrar(previa.plato, previa.bebida);
+    }
+  } catch (_) {}
 })();
 </script>
 </body>
