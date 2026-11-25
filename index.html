@@ -145,6 +145,8 @@
   .ticket span{font-family:var(--serif);text-align:right}
   .gracias .firma{margin-top:28px;font-size:1rem;color:var(--suave)}
   .cambiar{margin-top:26px;font-size:.7rem;padding:12px 22px}
+  .cal{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+  .cal .si{font-size:.72rem;padding:13px 20px;text-decoration:none;display:inline-block}
   footer{padding:50px 20px 90px;text-align:center;font-family:var(--serif);font-style:italic;color:var(--suave)}
 
   /* ---------- Modal, música, pétalos ---------- */
@@ -317,6 +319,10 @@
     <p id="graciasTexto"></p>
     <div class="ticket" id="ticket"></div>
     <p class="firma">Nos vemos pronto ✦</p>
+    <div class="cal">
+      <button class="si" id="calIcs" type="button">📅 Agregar a mi calendario</button>
+      <a class="si" id="calGoogle" target="_blank" rel="noopener">Google Calendar</a>
+    </div>
     <button class="no cambiar" id="cambiar" type="button">Cambiar mi elección</button>
   </div>
 </section>
@@ -342,6 +348,8 @@
     fecha: 'Sábado 28 de noviembre',     // Texto que se muestra
     fechaISO: '2026-11-28',              // Para la cuenta regresiva (AAAA-MM-DD). Vacío = sin cuenta
     hora: '1:00 pm',
+    horaInicio: '13:00',                 // Para el calendario (24 h)
+    duracionHoras: 3,                    // Duración del plan en el calendario
     lugar: 'En mi casa · Cra. 26 D #72 D-23, Villa del Lago',
     menu: 'Yo cocino. Tú solo disfrutas.',
     bebidas: ['Limonada', 'Jugo natural', 'Agua', 'Gaseosa'],
@@ -349,6 +357,7 @@
     platos: [
       { nombre: 'Carne con papas', video: 'videos/carne.mp4' },
       { nombre: 'Fetuccini Alfredo con pollo', video: 'videos/fetuccini.mp4' },
+      { nombre: 'Carne con chimichurri y papas fritas', video: 'videos/chimichurri.mp4' },
     ],
     postre: 'Un heladito',
     // Fotos: guárdalas en la carpeta images/. Si una no existe, se muestra un marco vacío.
@@ -590,6 +599,33 @@
   $('btnSi').addEventListener('click', aceptar);
   $('acepto').addEventListener('click', aceptar);
   $('sigoNo').addEventListener('click', () => $('modal').classList.remove('on'));
+
+  // ---- Recordatorio de calendario (.ics + enlace de Google Calendar) ----
+  const fechaCal = () => {
+    const ini = new Date(`${CONFIG.fechaISO}T${CONFIG.horaInicio}:00`), fin = new Date(ini.getTime() + CONFIG.duracionHoras * 36e5);
+    const f = d => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}T${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}00`;
+    return [f(ini), f(fin)];
+  };
+  const tituloCal = 'Almuerzo juntos 🍽️', detalleCal = () => `Te espero con mucho cariño. ${CONFIG.menu}`;
+  $('calIcs').addEventListener('click', () => {
+    const [ini, fin] = fechaCal();
+    const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Almuerzo//ES', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT',
+      `UID:almuerzo-${ini}@almuerzo-seven.vercel.app`, `DTSTAMP:${new Date().toISOString().replace(/[-:]|\.\d{3}/g, '')}`,
+      `DTSTART;TZID=America/Bogota:${ini}`, `DTEND;TZID=America/Bogota:${fin}`,
+      `SUMMARY:${tituloCal}`, `LOCATION:${CONFIG.lugar.replace(/,/g, '\\,')}`, `DESCRIPTION:${detalleCal().replace(/,/g, '\\,')}`,
+      'BEGIN:VALARM', 'TRIGGER:-P1D', 'ACTION:DISPLAY', 'DESCRIPTION:Mañana es el almuerzo', 'END:VALARM',
+      'BEGIN:VALARM', 'TRIGGER:-PT2H', 'ACTION:DISPLAY', 'DESCRIPTION:En 2 horas es el almuerzo', 'END:VALARM',
+      'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
+    a.download = 'almuerzo.ics'; document.body.appendChild(a); a.click(); a.remove();
+  });
+  (() => {
+    const [ini, fin] = fechaCal();
+    $('calGoogle').href = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+      `&text=${encodeURIComponent(tituloCal)}&dates=${ini}/${fin}&ctz=America/Bogota` +
+      `&details=${encodeURIComponent(detalleCal())}&location=${encodeURIComponent(CONFIG.lugar)}`;
+  })();
 
   // Volver a elegir después de haber confirmado (el nuevo correo avisa que es un cambio)
   let reconfirma = false;
