@@ -144,6 +144,7 @@
   .ticket b{font-weight:400;font-size:.68rem;letter-spacing:.25em;text-transform:uppercase;color:var(--oro);padding-top:4px}
   .ticket span{font-family:var(--serif);text-align:right}
   .gracias .firma{margin-top:28px;font-size:1rem;color:var(--suave)}
+  .cambiar{margin-top:26px;font-size:.7rem;padding:12px 22px}
   footer{padding:50px 20px 90px;text-align:center;font-family:var(--serif);font-style:italic;color:var(--suave)}
 
   /* ---------- Modal, música, pétalos ---------- */
@@ -316,6 +317,7 @@
     <p id="graciasTexto"></p>
     <div class="ticket" id="ticket"></div>
     <p class="firma">Nos vemos pronto ✦</p>
+    <button class="no cambiar" id="cambiar" type="button">Cambiar mi elección</button>
   </div>
 </section>
 
@@ -589,6 +591,17 @@
   $('acepto').addEventListener('click', aceptar);
   $('sigoNo').addEventListener('click', () => $('modal').classList.remove('on'));
 
+  // Volver a elegir después de haber confirmado (el nuevo correo avisa que es un cambio)
+  let reconfirma = false;
+  $('cambiar').addEventListener('click', () => {
+    reconfirma = true;
+    try { localStorage.removeItem('almuerzo-confirmado'); } catch (_) {}
+    $('gracias').classList.remove('on');
+    const b = $('form').querySelector('.enviar'); b.disabled = false; b.textContent = 'Confirmar mi nueva elección';
+    $('form').classList.add('on');
+    window.scrollTo(0, 0);
+  });
+
   $('form').addEventListener('submit', async e => {
     e.preventDefault();
     const bebida = document.querySelector('input[name=bebida]:checked');
@@ -611,7 +624,7 @@
             fecha: CONFIG.fecha, hora: CONFIG.hora, lugar: CONFIG.lugar,
             // Campos de la plantilla vieja del picnic, por compatibilidad
             food_choice: `Plato: ${plato.value} | Bebida: ${bebida.value} | Postre: ${CONFIG.postre}`,
-            moto_choice: 'Dijo que SÍ al almuerzo 🍽️',
+            moto_choice: reconfirma ? 'CAMBIÓ su elección 🔄 (esta reemplaza la anterior)' : 'Dijo que SÍ al almuerzo 🍽️',
             picnic_wish: 'Sin comentarios adicionales',
             date: `${CONFIG.fecha}, ${CONFIG.hora}`,
             location: CONFIG.lugar,
