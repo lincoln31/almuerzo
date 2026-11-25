@@ -595,7 +595,6 @@
   let reconfirma = false;
   $('cambiar').addEventListener('click', () => {
     reconfirma = true;
-    try { localStorage.removeItem('almuerzo-confirmado'); } catch (_) {}
     $('gracias').classList.remove('on');
     const b = $('form').querySelector('.enviar'); b.disabled = false; b.textContent = 'Confirmar mi nueva elección';
     $('form').classList.add('on');
@@ -642,27 +641,8 @@
       window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
     }
     $('form').classList.remove('on');
-    try { localStorage.setItem('almuerzo-confirmado', JSON.stringify({ plato: plato.value, bebida: bebida.value })); } catch (_) {}
     celebrar(plato.value, bebida.value);
   });
-
-  // Si ya confirmó antes y recarga la página, vuelve directo a la pantalla final (sin reenviar el correo)
-  // Con ?reset en el enlace se borra lo recordado, para que pueda confirmar de nuevo desde cero
-  try {
-    if (new URLSearchParams(location.search).has('reset')) {
-      localStorage.removeItem('almuerzo-confirmado');
-      history.replaceState(null, '', location.pathname);
-    }
-  } catch (_) {}
-  try {
-    const previa = JSON.parse(localStorage.getItem('almuerzo-confirmado'));
-    if (previa && previa.plato && previa.bebida) {
-      $('intro').style.display = 'none';
-      document.body.classList.remove('lock');
-      $('pregunta').style.display = 'none';
-      celebrar(previa.plato, previa.bebida);
-    }
-  } catch (_) {}
 })();
 </script>
 </body>
